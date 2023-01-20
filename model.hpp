@@ -162,10 +162,7 @@ class Model {
 	// This value is computed based on the current responses provided by the user at the time of compuationt  
 	float absConfidence(unsigned char* responses, int responseCount) {
 		float absConfidence = 0.0;
-		cout<<"Calculating confidence level: "<<endl;
 		for(int i = 0; i < responseCount; i++) {
-//			float prevAbsConfidence = abs
-//			cout<<"absConfidence: "<<absConfidence<<" = "<<relWeightPerQtn[i]<<" * "<<relFreqOfResponsesPerQtn[i][responses[i] - 1]<<endl;
 			absConfidence = absConfidence + relWeightPerQtn[i] * relFreqOfResponsesPerQtn[i][responses[i] - 1];
 			
 		}

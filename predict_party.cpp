@@ -71,21 +71,11 @@ bool compileModel(Model* models, char** partyDataFiles, char** partyModelNames, 
 	return true;
 }
 
-int main() {
-	int dataFileCount = 2;
-	char* partyDataFiles[4] = {"party1.txt", "party2.txt"};//, "party2.txt", "party3.txt", "party4.txt"};
-	char* partyModelNames[4] = {"party1", "party2" , "party3", "party4"};
-	Model models[4];
-	compileModel(models, partyDataFiles, partyModelNames, dataFileCount);
-	cout<<"Printing Model Summary"<<endl;
-	for(int i = 0; i < dataFileCount; i++) {
-		modelSummary(models[i], 10);
-	}
-	unsigned char sampleData[9] = {1, 2, 4, 4, 1, 4, 3, 1, 1};
+float* predict(Model* models, unsigned char* sampleData, int sampleDataLength, int dataFileCount = 2, float threshold = 0.5, int maxSampleDataLength = 10) {
 	
 	float confidenceList[4];
 	for(int i = 0; i < dataFileCount; i++) {
-		confidenceList[i] = models[i].absConfidence(sampleData, 9);
+		confidenceList[i] = models[i].absConfidence(sampleData, sampleDataLength);
 		cout<<"Party"<<i+1<<" confidence: "<<confidenceList[i]<<endl;
 	}
 	
@@ -99,8 +89,61 @@ int main() {
 		}
 	}
 	
+	float* predictionData = new float[3];
 	
-	cout<<"The predicted party: "<<partyModelNames[indexOfMax]<<" , Confidence: "<<maxConfidence<<endl;
+	if(maxConfidence < threshold && sampleDataLength < maxSampleDataLength) {
+		predictionData[0] = -1; //Returned index
+		return predictionData;
+	} else {
+		predictionData[0] = indexOfMax;
+		predictionData[1] = maxConfidence;
+		return predictionData;
+	}
+		
+}
+
+
+int main() {
+	int dataFileCount = 4;
+	unsigned char responses[10];
+	int qtnCount = 10;
+	char* partyDataFiles[4] = {"party1.txt", "party2.txt", "party3.txt", "party4.txt" };//, "party2.txt", "party3.txt", "party4.txt"};
+	char* partyModelNames[4] = {"party1", "party2" , "party3", "party4"};
+	Model models[4];
+	compileModel(models, partyDataFiles, partyModelNames, dataFileCount);
+	cout<<"Printing Model Summary"<<endl;
+	for(int i = 0; i < dataFileCount; i++) {
+		modelSummary(models[i], 10);
+	}
+	unsigned char sampleData[9] = {1, 2, 4, 4, 1, 4, 3, 1, 1};
+	unsigned char newResponse;
+	for(int i = 0; i < qtnCount; i++) {
+		repeat:
+		cout<<endl;
+		cout<<qtns[i]._question<<endl;
+		cout<<"\t"<<"1. "<<qtns[i]._option1<<endl;
+		cout<<"\t"<<"2. "<<qtns[i]._option2<<endl;
+		cout<<"\t"<<"3. "<<qtns[i]._option1<<endl;
+		cout<<"\t"<<"4. "<<qtns[i]._option2<<endl;
+		cout<<"\t"<<"Ans: ";
+		cin>>newResponse;
+		if(newResponse != '1' && newResponse != '2' && newResponse != '3' && newResponse != '4') {
+			cout<<"Invalid response"<<endl;
+			goto repeat;
+		}
+		
+		else responses[i] = newResponse -  48;
+		
+		float* prediction = predict(models, responses, i + 1, dataFileCount, 0.65);
+		if(prediction[0] == -1) {
+//			cout<<"Invalid prediction"<<endl;
+		} else {
+			cout<<"The predicted party: "<<partyModelNames[(int)prediction[0]]<<" , Confidence: "<<prediction[1]<<endl;
+			break;
+		}
+			
+	}	
+	
 }
 
 #endif
